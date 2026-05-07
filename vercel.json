@@ -1,0 +1,12 @@
+{
+    "crons": [
+          {
+                  "path": "/api/automations/follow-up",
+                  "schedule": "0 9 * * *"
+          },
+          {
+                  "path": "/api/automations/rank-buyers",
+                  "schedule": "0 8 * * 1"
+          }
+    ]
+}
