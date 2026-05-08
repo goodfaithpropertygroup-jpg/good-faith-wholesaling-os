@@ -62,21 +62,21 @@ export default function DashboardPage() {
                       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                                 <div className="flex justify-between items-center h-16">
                                             <div className="flex items-center gap-6">
-                                                          <span className="font-bold text-lg text-gray-900">Good Faith Property Group</span>span>
+                                                          <span className="font-bold text-lg text-gray-900">Good Faith Property Group</span>
                                                           <div className="flex gap-4">
                                                             {navLinks.map(link => (
-                            <Link key={link.href} href={link.href} className="text-sm text-gray-600 hover:text-gray-900">{link.label}</Link>Link>
+                            <Link key={link.href} href={link.href} className="text-sm text-gray-600 hover:text-gray-900">{link.label}</Link>
                           ))}
-                                                          </div>div>
-                                            </div>div>
+                                                          </div>
+                                            </div>
                                             <UserButton afterSignOutUrl="/" />
-                                </div>div>
-                      </div>div>
-              </nav>nav>
+                                </div>
+                      </div>
+              </nav>
               <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                      <h1 className="text-2xl font-bold text-gray-900 mb-6">KPI Dashboard</h1>h1>
+                      <h1 className="text-2xl font-bold text-gray-900 mb-6">KPI Dashboard</h1>
                 {loading ? (
-                    <div className="text-center py-12">Loading...</div>div>
+                    <div className="text-center py-12">Loading...</div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <StatCard title="Total Leads" value={stats.totalLeads} color="blue" />
@@ -85,10 +85,10 @@ export default function DashboardPage() {
                                 <StatCard title="Total Deals" value={stats.totalDeals} color="orange" />
                                 <StatCard title="Closed Deals" value={stats.closedDeals} color="green" />
                                 <StatCard title="Total Revenue" value={`$${stats.totalRevenue.toLocaleString()}`} color="emerald" />
-                    </div>div>
+                    </div>
                       )}
-              </main>main>
-        </div>div>
+              </main>
+        </div>
       );
 }
 
@@ -102,8 +102,8 @@ function StatCard({ title, value, color }: { title: string; value: number | stri
     };
     return (
           <div className={`rounded-lg border p-6 ${colorMap[color] || colorMap.blue}`}>
-                <p className="text-sm font-medium opacity-75">{title}</p>p>
-                <p className="text-3xl font-bold mt-2">{value}</p>p>
-          </div>div>
+                <p className="text-sm font-medium opacity-75">{title}</p>
+                <p className="text-3xl font-bold mt-2">{value}</p>
+          </div>
         );
 }</div>
