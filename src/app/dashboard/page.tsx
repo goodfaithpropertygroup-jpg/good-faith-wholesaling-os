@@ -106,4 +106,4 @@ function StatCard({ title, value, color }: { title: string; value: number | stri
                 <p className="text-3xl font-bold mt-2">{value}</p>
           </div>
         );
-}</div>
+}
