@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase';
 
 export async function GET(request: Request) {
     const authHeader = request.headers.get('authorization');
@@ -7,7 +7,7 @@ export async function GET(request: Request) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-    const supabase = createServiceClient();
+    const supabase = createServerSupabaseClient();
 
     try {
           // Get all cash buyers
