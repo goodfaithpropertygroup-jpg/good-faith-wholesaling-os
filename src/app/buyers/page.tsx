@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface Buyer {
       id: string;
@@ -25,8 +25,6 @@ export default function BuyersPage() {
               first_name: '', last_name: '', email: '', phone: '',
               max_purchase_price: '', preferred_areas: '', status: 'active', proof_of_funds: false
       });
-
-  const supabase = createClient();
 
   useEffect(() => {
           fetchBuyers();
