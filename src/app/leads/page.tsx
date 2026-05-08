@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface Lead {
       id: string;
@@ -30,8 +30,6 @@ export default function LeadsPage() {
               address: '', city: '', state: '', zip: '',
               status: 'new', source: 'cold_call', notes: '', asking_price: ''
       });
-
-  const supabase = createClient();
 
   useEffect(() => { fetchLeads(); }, [statusFilter]);
 
