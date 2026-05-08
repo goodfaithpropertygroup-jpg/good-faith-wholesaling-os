@@ -18,3 +18,6 @@ export function createServerSupabaseClient() {
       }
         );
 }
+
+// Re-export createClient for convenience
+export { createClient };
