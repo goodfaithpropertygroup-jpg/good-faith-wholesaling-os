@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface Campaign {
     id: string;
@@ -21,8 +21,6 @@ export default function CampaignsPage() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ name: '', type: 'sms', status: 'draft', start_date: '', end_date: '' });
-
-  const supabase = createClient();
 
   useEffect(() => {
         fetchCampaigns();
