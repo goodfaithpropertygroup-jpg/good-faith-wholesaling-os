@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-    const supabase = createServiceClient();
+    const supabase = createServerSupabaseClient();
 
     try {
           const threeDaysAgo = new Date();
