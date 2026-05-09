@@ -1,4 +1,70 @@
 'use client';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+
+export default function CampaignsPage() {
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, active: 0, leadsReached: 0, responses: 0 });
+
+  useEffect(() => {
+    supabase.from('campaigns').select('*').order('created_at', { ascending: false })
+      .then(({ data, count }) => {
+        const camps = data || [];
+        setCampaigns(camps);
+        setStats({
+          total: camps.length,
+          active: camps.filter(c => c.status === 'active').length,
+          leadsReached: camps.reduce((s, c) => s + (c.leads_reached || 0), 0),
+          responses: camps.reduce((s, c) => s + (c.responses || 0), 0),
+        });
+        setLoading(false);
+      });
+  }, []);
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Campaigns</h1>
+          <p className="text-sm text-gray-500 mt-1">Track your outreach campaigns and response rates</p>
+        </div>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium">
+          + New Campaign
+        </button>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {[{label:'Total Campaigns',val:stats.total},{label:'Active',val:stats.active},{label:'Total Leads Reached',val:stats.leadsReached},{label:'Total Responses',val:stats.responses}].map(s=>(
+          <div key={s.label} className="bg-white rounded-lg border p-4">
+            <p className="text-xs text-gray-500">{s.label}</p>
+            <p className="text-2xl font-bold text-gray-900">{s.val}</p>
+          </div>
+        ))}
+      </div>
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">Loading campaigns...</div>
+      ) : campaigns.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">No campaigns yet. Create your first campaign!</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {campaigns.map(c => (
+            <div key={c.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-semibold text-gray-900">{c.name}</h3>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{c.status}</span>
+              </div>
+              <p className="text-xs text-gray-500 mb-3">{c.type || 'SMS'}</p>
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                <div>Leads: {c.leads_reached || 0}</div>
+                <div>Responses: {c.responses || 0}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
