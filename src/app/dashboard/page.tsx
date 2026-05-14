@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Users, UserCheck, Briefcase, TrendingUp, DollarSign, Target, Activity, ChevronRight } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
   totalLeads: number;
@@ -17,19 +17,6 @@ interface DashboardStats {
   leadsByStatus: { status: string; count: number }[];
   dealsByStatus: { status: string; count: number }[];
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  new: '#3B82F6',
-  contacted: '#8B5CF6',
-  follow_up: '#F59E0B',
-  under_contract: '#10B981',
-  closed: '#059669',
-  dead: '#6B7280',
-  active: '#10B981',
-  paused: '#F59E0B',
-  draft: '#6B7280',
-  completed: '#3B82F6',
-};
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
@@ -64,12 +51,10 @@ export default function DashboardPage() {
       const closedDeals = deals.filter(d => d.status === 'closed');
       const totalRevenue = closedDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
 
-      // Group leads by status
       const leadStatusMap: Record<string, number> = {};
       leads.forEach(l => { leadStatusMap[l.status] = (leadStatusMap[l.status] || 0) + 1; });
       const leadsByStatus = Object.entries(leadStatusMap).map(([status, count]) => ({ status, count }));
 
-      // Group deals by status
       const dealStatusMap: Record<string, number> = {};
       deals.forEach(d => { dealStatusMap[d.status] = (dealStatusMap[d.status] || 0) + 1; });
       const dealsByStatus = Object.entries(dealStatusMap).map(([status, count]) => ({ status, count }));
@@ -93,12 +78,12 @@ export default function DashboardPage() {
   }, []);
 
   const kpiCards = [
-    { title: 'Total Leads', value: stats.totalLeads, sub: `${stats.activeLeads} active`, icon: Users, color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' },
-    { title: 'Cash Buyers', value: stats.totalBuyers, sub: 'in database', icon: UserCheck, color: 'purple', bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-100' },
-    { title: 'Total Deals', value: stats.totalDeals, sub: `${stats.closedDeals} closed`, icon: Briefcase, color: 'orange', bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100' },
-    { title: 'Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, sub: 'from closed deals', icon: DollarSign, color: 'green', bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-100' },
-    { title: 'Active Campaigns', value: stats.activeCampaigns, sub: 'running now', icon: Target, color: 'pink', bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-100' },
-    { title: 'Close Rate', value: stats.totalDeals > 0 ? `${Math.round((stats.closedDeals / stats.totalDeals) * 100)}%` : '0%', sub: 'deals to closed', icon: TrendingUp, color: 'teal', bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-100' },
+    { title: 'Total Leads', value: stats.totalLeads, sub: `${stats.activeLeads} active`, icon: Users, bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' },
+    { title: 'Cash Buyers', value: stats.totalBuyers, sub: 'in database', icon: UserCheck, bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-100' },
+    { title: 'Total Deals', value: stats.totalDeals, sub: `${stats.closedDeals} closed`, icon: Briefcase, bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100' },
+    { title: 'Revenue', value: `$${stats.totalRevenue.toLocaleString()}`, sub: 'from closed deals', icon: DollarSign, bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-100' },
+    { title: 'Active Campaigns', value: stats.activeCampaigns, sub: 'running now', icon: Target, bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-100' },
+    { title: 'Close Rate', value: stats.totalDeals > 0 ? `${Math.round((stats.closedDeals / stats.totalDeals) * 100)}%` : '0%', sub: 'deals to closed', icon: TrendingUp, bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-100' },
   ];
 
   if (loading) {
@@ -114,7 +99,6 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">KPI Dashboard</h1>
@@ -126,7 +110,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {kpiCards.map((card) => (
           <div key={card.title} className={`bg-white rounded-xl border ${card.border} p-4 flex items-start gap-4`}>
@@ -142,9 +125,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Leads by Status */}
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Leads by Status</h3>
           {stats.leadsByStatus.length === 0 ? (
@@ -161,8 +142,6 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           )}
         </div>
-
-        {/* Deals by Status */}
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Deals by Status</h3>
           {stats.dealsByStatus.length === 0 ? (
@@ -181,9 +160,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Activity Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Recent Leads */}
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-700">Recent Leads</h3>
@@ -212,8 +189,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-
-        {/* Recent Deals */}
         <div className="bg-white rounded-xl border border-gray-100 p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-700">Recent Deals</h3>
@@ -242,89 +217,6 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-    </div>
-  );
-}'use client';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-
-interface DashboardStats {
-  totalLeads: number;
-  activeLeads: number;
-  totalBuyers: number;
-  totalDeals: number;
-  closedDeals: number;
-  totalRevenue: number;
-}
-
-export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalLeads: 0,
-    activeLeads: 0,
-    totalBuyers: 0,
-    totalDeals: 0,
-    closedDeals: 0,
-    totalRevenue: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchStats() {
-      const [leadsRes, buyersRes, dealsRes] = await Promise.all([
-        supabase.from('leads').select('id, status', { count: 'exact' }),
-        supabase.from('cash_buyers').select('id', { count: 'exact' }),
-        supabase.from('deals').select('id, status, purchase_price', { count: 'exact' }),
-      ]);
-
-      const leads = leadsRes.data || [];
-      const deals = dealsRes.data || [];
-      const closedDeals = deals.filter(d => d.status === 'closed');
-      const totalRevenue = closedDeals.reduce((sum, d) => sum + (d.purchase_price || 0), 0);
-
-      setStats({
-        totalLeads: leadsRes.count || 0,
-        activeLeads: leads.filter(l => ['new', 'contacted', 'follow_up'].includes(l.status)).length,
-        totalBuyers: buyersRes.count || 0,
-        totalDeals: dealsRes.count || 0,
-        closedDeals: closedDeals.length,
-        totalRevenue,
-      });
-      setLoading(false);
-    }
-    fetchStats();
-  }, []);
-
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">KPI Dashboard</h1>
-      {loading ? (
-        <div className="text-center py-12">Loading...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <StatCard title="Total Leads" value={stats.totalLeads} color="blue" />
-          <StatCard title="Active Leads" value={stats.activeLeads} color="green" />
-          <StatCard title="Cash Buyers" value={stats.totalBuyers} color="purple" />
-          <StatCard title="Total Deals" value={stats.totalDeals} color="orange" />
-          <StatCard title="Closed Deals" value={stats.closedDeals} color="green" />
-          <StatCard title="Total Revenue" value={`$${stats.totalRevenue.toLocaleString()}`} color="emerald" />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StatCard({ title, value, color }: { title: string; value: number | string; color: string }) {
-  const colorMap: Record<string, string> = {
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700',
-    orange: 'bg-orange-50 border-orange-200 text-orange-700',
-    emerald: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-  };
-  return (
-    <div className={`rounded-lg border p-6 ${colorMap[color] || colorMap.blue}`}>
-      <p className="text-sm font-medium opacity-75">{title}</p>
-      <p className="text-3xl font-bold mt-2">{value}</p>
     </div>
   );
 }
