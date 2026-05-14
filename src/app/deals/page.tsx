@@ -31,7 +31,7 @@ export default function DealsPage() {
   const [showModal, setShowModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [blasting, setBlasting] = useState<string | null>(null);
-  const [blastResult, setBlastResult] = useState<{ deal_id: string; message: string; success: boolean } | null>(null);
+  const [blastResult, setBlastResult] = useState<{ message: string; success: boolean } | null>(null);
   const [form, setForm] = useState({
     property_address: '',
     status: 'new',
@@ -72,17 +72,14 @@ export default function DealsPage() {
     try {
       const res = await fetch('/api/automations/buyer-blast', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ''}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deal_id: dealId }),
       });
       const data = await res.json();
-      setBlastResult({ deal_id: dealId, message: data.message || `Sent to ${data.sent} buyers`, success: res.ok });
+      setBlastResult({ message: data.message || `Sent to ${data.sent} buyers`, success: res.ok });
       if (res.ok) fetchDeals();
     } catch {
-      setBlastResult({ deal_id: dealId, message: 'Failed to send blast', success: false });
+      setBlastResult({ message: 'Failed to send blast', success: false });
     } finally {
       setBlasting(null);
     }
@@ -106,7 +103,6 @@ export default function DealsPage() {
         </button>
       </div>
 
-      {/* Blast Result Notification */}
       {blastResult && (
         <div className={`flex items-center gap-3 p-4 rounded-xl ${blastResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
           {blastResult.success ? <CheckCircle className="w-5 h-5 text-green-600" /> : <AlertCircle className="w-5 h-5 text-red-600" />}
@@ -115,24 +111,15 @@ export default function DealsPage() {
         </div>
       )}
 
-      {/* Status Filter */}
       <div className="flex gap-2 flex-wrap">
         {['all', ...STATUS_OPTIONS].map(s => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              statusFilter === s
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
+          <button key={s} onClick={() => setStatusFilter(s)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === s ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {s.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
           </button>
         ))}
       </div>
 
-      {/* Deals Table */}
       {loading ? (
         <div className="text-center py-12 text-gray-500">Loading deals...</div>
       ) : deals.length === 0 ? (
@@ -140,10 +127,7 @@ export default function DealsPage() {
           <Home className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 font-medium">No deals yet.</p>
           <p className="text-gray-400 text-sm mt-1">Add your first deal to start tracking your pipeline.</p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
-          >
+          <button onClick={() => setShowModal(true)} className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
             + Add Deal
           </button>
         </div>
@@ -170,20 +154,15 @@ export default function DealsPage() {
                     <td className="px-4 py-3 text-gray-600">{d.purchase_price ? `$${Number(d.purchase_price).toLocaleString()}` : '-'}</td>
                     <td className="px-4 py-3 text-gray-600">{d.arv ? `$${Number(d.arv).toLocaleString()}` : '-'}</td>
                     <td className="px-4 py-3">
-                      {equity(d) !== null ? (
-                        <span className="text-green-600 font-medium">`$${equity(d)!.toLocaleString()}`</span>
-                      ) : '-'}
+                      {equity(d) !== null ? <span className="text-green-600 font-medium">`$${equity(d)!.toLocaleString()}`</span> : '-'}
                     </td>
                     <td className="px-4 py-3 text-gray-600">{d.assigned_buyer || '-'}</td>
                     <td className="px-4 py-3 text-gray-600">{d.close_date ? new Date(d.close_date).toLocaleDateString() : '-'}</td>
                     <td className="px-4 py-3">
                       {d.status !== 'closed' && d.status !== 'dead' && (
-                        <button
-                          onClick={() => blastBuyers(d.id)}
-                          disabled={blasting === d.id}
+                        <button onClick={() => blastBuyers(d.id)} disabled={blasting === d.id}
                           className="flex items-center gap-1.5 bg-orange-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors"
-                          title="Blast this deal to all active buyers"
-                        >
+                          title="Email this deal to all active buyers">
                           <Send className="w-3 h-3" />
                           {blasting === d.id ? 'Sending...' : 'Blast Buyers'}
                         </button>
@@ -197,99 +176,65 @@ export default function DealsPage() {
         </div>
       )}
 
-      {/* Add Deal Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div className="p-6 border-b border-gray-100">
               <h2 className="text-lg font-bold text-gray-900">Add New Deal</h2>
-              <p className="text-sm text-gray-500 mt-1">Enter the property and deal details below</p>
             </div>
             <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Property Address *</label>
-                <input
-                  value={form.property_address}
-                  onChange={e => setForm({...form, property_address: e.target.value})}
+                <input value={form.property_address} onChange={e => setForm({...form, property_address: e.target.value})}
                   placeholder="123 Main St, City, State"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    value={form.status}
-                    onChange={e => setForm({...form, status: e.target.value})}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
+                  <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Close Date</label>
-                  <input
-                    type="date"
-                    value={form.close_date}
-                    onChange={e => setForm({...form, close_date: e.target.value})}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="date" value={form.close_date} onChange={e => setForm({...form, close_date: e.target.value})}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Purchase Price ($)</label>
-                  <input
-                    type="number"
-                    value={form.purchase_price}
-                    onChange={e => setForm({...form, purchase_price: e.target.value})}
-                    placeholder="150000"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="number" value={form.purchase_price} onChange={e => setForm({...form, purchase_price: e.target.value})}
+                    placeholder="150000" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">ARV ($)</label>
-                  <input
-                    type="number"
-                    value={form.arv}
-                    onChange={e => setForm({...form, arv: e.target.value})}
-                    placeholder="220000"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <input type="number" value={form.arv} onChange={e => setForm({...form, arv: e.target.value})}
+                    placeholder="220000" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Assigned Buyer</label>
-                <input
-                  value={form.assigned_buyer}
-                  onChange={e => setForm({...form, assigned_buyer: e.target.value})}
+                <input value={form.assigned_buyer} onChange={e => setForm({...form, assigned_buyer: e.target.value})}
                   placeholder="Buyer name or email"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Notes</label>
-                <textarea
-                  value={form.notes}
-                  onChange={e => setForm({...form, notes: e.target.value})}
-                  placeholder="Deal notes, conditions, etc."
-                  rows={3}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                />
+                <textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})}
+                  placeholder="Deal notes..." rows={3}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               </div>
             </div>
             <div className="p-6 border-t border-gray-100 flex gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50"
-              >
+              <button onClick={() => setShowModal(false)}
+                className="flex-1 border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50">
                 Cancel
               </button>
-              <button
-                onClick={addDeal}
-                disabled={!form.property_address.trim()}
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button onClick={addDeal} disabled={!form.property_address.trim()}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
                 Add Deal
               </button>
             </div>
