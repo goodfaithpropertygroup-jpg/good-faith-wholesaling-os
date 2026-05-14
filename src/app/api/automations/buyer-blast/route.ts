@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
+  // Support both Clerk auth (from UI) and CRON_SECRET (from automation)
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const isCronAuth = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+  
+  if (!isCronAuth) {
+    // Check Clerk auth for UI calls
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   const { deal_id } = await request.json();
@@ -59,7 +67,7 @@ export async function POST(request: Request) {
             </div>
             <div style="padding: 30px; background: #f8fafc;">
               <h2 style="color: #1e293b;">Hi ${buyer.first_name || 'Valued Buyer'},</h2>
-              <p style="color: #475569;">We have a new wholesale opportunity that matches your criteria:</p>
+              <p style="color: #475569;">We have a new wholesale opportunity that may match your criteria:</p>
               
               <div style="background: white; border-radius: 12px; padding: 24px; margin: 20px 0; border: 1px solid #e2e8f0;">
                 <h3 style="color: #1e293b; margin-top: 0;">🏠 ${deal.property_address}</h3>
@@ -84,7 +92,7 @@ export async function POST(request: Request) {
                 ${deal.notes ? `<p style="color: #475569; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;"><strong>Notes:</strong> ${deal.notes}</p>` : ''}
               </div>
               
-              <p style="color: #475569;">Reply to this email or call us to express your interest. This deal won't last long!</p>
+              <p style="color: #475569;">Reply to this email to express your interest. Deals move fast!</p>
               
               <div style="text-align: center; margin-top: 30px;">
                 <p style="color: #94a3b8; font-size: 12px;">Good Faith Property Group | Real Estate Wholesaling</p>
@@ -105,7 +113,7 @@ export async function POST(request: Request) {
       results.push({ buyer_id: buyer.id, email: buyer.email, success: !emailError });
     }
 
-    // Update deal status to 'assigned' if not already
+    // Update deal status if new
     if (deal.status === 'new' || deal.status === 'analyzing') {
       await supabase.from('deals').update({ status: 'under_contract' }).eq('id', deal_id);
     }
@@ -118,8 +126,7 @@ export async function POST(request: Request) {
     }]);
 
     return NextResponse.json({
-      message: 'Buyer blast sent',
-      deal: deal.property_address,
+      message: `Buyer blast sent to ${results.filter(r => r.success).length} buyers!`,
       sent: results.filter(r => r.success).length,
       failed: results.filter(r => !r.success).length,
       total: buyers.length,
