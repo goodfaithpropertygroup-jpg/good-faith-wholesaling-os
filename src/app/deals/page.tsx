@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Plus, Home, DollarSign, Calendar, User, TrendingUp } from 'lucide-react';
+import { Plus, Home, Send, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface Deal {
   id: string;
@@ -30,6 +30,8 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [blasting, setBlasting] = useState<string | null>(null);
+  const [blastResult, setBlastResult] = useState<{ deal_id: string; message: string; success: boolean } | null>(null);
   const [form, setForm] = useState({
     property_address: '',
     status: 'new',
@@ -64,6 +66,28 @@ export default function DealsPage() {
     }
   }
 
+  async function blastBuyers(dealId: string) {
+    setBlasting(dealId);
+    setBlastResult(null);
+    try {
+      const res = await fetch('/api/automations/buyer-blast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ''}`,
+        },
+        body: JSON.stringify({ deal_id: dealId }),
+      });
+      const data = await res.json();
+      setBlastResult({ deal_id: dealId, message: data.message || `Sent to ${data.sent} buyers`, success: res.ok });
+      if (res.ok) fetchDeals();
+    } catch {
+      setBlastResult({ deal_id: dealId, message: 'Failed to send blast', success: false });
+    } finally {
+      setBlasting(null);
+    }
+  }
+
   const equity = (d: Deal) => d.arv && d.purchase_price ? d.arv - d.purchase_price : null;
 
   return (
@@ -81,6 +105,15 @@ export default function DealsPage() {
           + Add Deal
         </button>
       </div>
+
+      {/* Blast Result Notification */}
+      {blastResult && (
+        <div className={`flex items-center gap-3 p-4 rounded-xl ${blastResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+          {blastResult.success ? <CheckCircle className="w-5 h-5 text-green-600" /> : <AlertCircle className="w-5 h-5 text-red-600" />}
+          <p className={`text-sm font-medium ${blastResult.success ? 'text-green-700' : 'text-red-700'}`}>{blastResult.message}</p>
+          <button onClick={() => setBlastResult(null)} className="ml-auto text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+      )}
 
       {/* Status Filter */}
       <div className="flex gap-2 flex-wrap">
@@ -120,7 +153,7 @@ export default function DealsPage() {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  {['Property', 'Status', 'Purchase $', 'ARV', 'Equity', 'Buyer', 'Close Date'].map(h => (
+                  {['Property', 'Status', 'Purchase $', 'ARV', 'Equity', 'Buyer', 'Close Date', 'Actions'].map(h => (
                     <th key={h} className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -143,6 +176,19 @@ export default function DealsPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{d.assigned_buyer || '-'}</td>
                     <td className="px-4 py-3 text-gray-600">{d.close_date ? new Date(d.close_date).toLocaleDateString() : '-'}</td>
+                    <td className="px-4 py-3">
+                      {d.status !== 'closed' && d.status !== 'dead' && (
+                        <button
+                          onClick={() => blastBuyers(d.id)}
+                          disabled={blasting === d.id}
+                          className="flex items-center gap-1.5 bg-orange-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                          title="Blast this deal to all active buyers"
+                        >
+                          <Send className="w-3 h-3" />
+                          {blasting === d.id ? 'Sending...' : 'Blast Buyers'}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
